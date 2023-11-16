@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.4.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 245.6 245.6" style="enable-background:new 0 0 245.6 245.6;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#BFBFBF;}
+	.st1{fill:#666666;}
+	.st2{fill:#E8EADF;}
+	.st3{fill:none;}
+</style>
+<circle class="st0" cx="122.8" cy="122.8" r="122.8"/>
+<circle class="st1" cx="122.8" cy="122.8" r="119"/>
+<g class="rotating">
+	<circle cx="122.8" cy="120.46" r="65.96"/>
+	<circle class="st2" cx="122.8" cy="120.46" r="55.74"/>
+	<g>
+		<polygon points="111.64,60.28 122.8,33.33 133.96,60.28 		"/>
+		<polygon class="st3" points="133.96,180.64 122.8,207.58 111.64,180.64 		"/>
+		<polygon class="st3" points="182.99,109.3 209.93,120.46 182.99,131.62 		"/>
+		<polygon class="st3" points="62.62,131.62 35.68,120.46 62.62,109.3 		"/>
+	</g>
+</g>
+</svg>

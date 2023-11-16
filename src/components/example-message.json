@@ -1,0 +1,29 @@
+{
+  "address": "/tracker/update",
+  "args": [
+    {
+      "type": "i",
+      "value": 3
+    },
+    {
+      "type": "i",
+      "value": -1
+    },
+    {
+      "type": "f",
+      "value": 0.5649489164352417
+    },
+    {
+      "type": "f",
+      "value": 0.3315972089767456
+    },
+    {
+      "type": "f",
+      "value": 27.915740966796875
+    },
+    {
+      "type": "f",
+      "value": 0
+    }
+  ]
+}

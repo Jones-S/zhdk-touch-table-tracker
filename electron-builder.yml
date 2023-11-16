@@ -1,0 +1,19 @@
+directories:
+  output: ./output
+
+mac:
+  # category: public.app-category.productivity
+  # icon: ./build-helpers/images/icon.icns
+  target:
+    target: default
+    arch:
+      - x64
+      - arm64
+
+win:
+  # icon: ./build-helpers/images/icon.ico
+  target:
+    target: nsis
+    arch:
+      - x64
+      - ia32
