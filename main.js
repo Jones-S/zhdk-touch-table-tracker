@@ -7,12 +7,10 @@
 
 /* eslint-disable no-undef */
 const { app, BrowserWindow } = require('electron')
-const startWebSocketServer = require('./src/websocket/server.js')
-const startUDPServer = require('./src/udp/server.js')
+const startServers = require('./src/websocket/server.js')
 
 const url = require('url')
 const path = require('path')
-const startWebSocketServer = require('./src/websocket/server.js')
 
 let mainWindow
 
@@ -46,8 +44,7 @@ app.on('activate', function () {
   if (mainWindow === null) createWindow()
 })
 
-const websocket = startWebSocketServer()
-const udp = startUDPServer(websocket)
+startServers()
 
 // To test if the websocket is running just execute some JavaScript inside the browsers console:
 // const ws = new WebSocket('ws://localhost:6050')

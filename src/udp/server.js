@@ -55,7 +55,6 @@ function startUDPServer(ws) {
   udpPort.on('message', function (oscMessage) {
     console.log('Received OSC message:', oscMessage)
     // Pass the message on to the websocket server
-    ws.send('OSC Message: ', oscMessage)
   })
 
   // Start the OSC Server
