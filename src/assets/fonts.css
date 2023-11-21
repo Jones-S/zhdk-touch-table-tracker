@@ -1,0 +1,6 @@
+@font-face {
+  font-family: jetbrains-medium;
+  font-style: normal;
+  font-weight: normal;
+  src: url('@/assets/fonts/JetBrainsMono-Medium.woff') format('woff');
+}
