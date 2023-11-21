@@ -21,8 +21,10 @@
   "dependencies": {
     "dotenv": "^16.3.1",
     "http": "^0.0.1-security",
+    "mathjs": "^12.1.0",
     "osc": "^2.4.4",
     "vue": "^3.3.4",
+    "vue-camera-lib": "^1.0.4",
     "vue-router": "^4.2.5",
     "ws": "^8.14.2"
   },
