@@ -23,6 +23,7 @@
     "http": "^0.0.1-security",
     "osc": "^2.4.4",
     "vue": "^3.3.4",
+    "vue-router": "^4.2.5",
     "ws": "^8.14.2"
   },
   "devDependencies": {

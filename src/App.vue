@@ -1,11 +1,13 @@
 <script setup>
-import TouchTable from './components/TouchTable.vue'
+import { RouterView } from 'vue-router'
+
+import TheNavigation from './components/TheNavigation.vue'
 </script>
 
 <template>
-  <main>
-    <TouchTable />
-  </main>
+  <TheNavigation />
+
+  <RouterView />
 </template>
 
 <style scoped></style>
