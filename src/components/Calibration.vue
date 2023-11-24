@@ -170,22 +170,28 @@ onMounted(() => {
   canvas.value.addEventListener('mouseup', handleMouseUp)
   canvas.value.addEventListener('contextmenu', handleMouseRightClick)
 
-  window.electron.onJsonSaved((event, status) => {
-    if (status === 'success') {
-      console.log('JSON saved successfully!')
-    } else {
-      console.error('Failed to save JSON')
-    }
-  })
+  if (window?.electron) {
+    window.electron.onJsonSaved((event, status) => {
+      if (status === 'success') {
+        console.log('JSON saved successfully!')
+      } else {
+        console.error('Failed to save JSON')
+      }
+    })
+  }
 })
 </script>
 
 <template>
-  <div>Calibration in here</div>
-  <WebCamUI class="webcamui" v-if="!image" :fullscreenState="false" @photoTaken="photoTaken" />
+  <WebCamUI
+    class="webcamui"
+    v-if="!image"
+    :fullscreenState="false"
+    @photoTaken="photoTaken"
+    fullscreen-button="false"
+  />
 
-  <!-- <img v-if="image" :src="image" /> -->
-  <canvas v-show="image" ref="canvas" width="800" height="600"></canvas>
+  <canvas v-show="image" ref="canvas"></canvas>
 </template>
 
 <style scoped>
@@ -193,13 +199,30 @@ img {
   width: 100%;
 }
 
-.webcamui {
-  width: 50%;
+.webcam-ui {
+  width: 100%;
   max-width: 40vw;
 }
 
-/* canvas {
-  width: 100%;
-  height: 60vh;
-} */
+.webcamui::v-deep .flex div {
+  margin-right: 1em;
+}
+
+.webcamui::v-deep select {
+  height: 100%;
+}
+
+.webcamui::v-deep button {
+  background-color: var(--color-active);
+  color: var(--vt-c-black);
+}
+
+.webcamui::v-deep button:hover {
+  background-color: var(--color-highlight);
+}
+
+canvas {
+  width: 100vw;
+  height: 100vh;
+}
 </style>

@@ -40,7 +40,6 @@ function createWindow() {
     mainWindow = null
   })
 
-  // Listen for 'save-json' message from renderer process
   ipcMain.on('save-json', (event, data) => {
     // Perform file system operation to save the JSON file
     const filePath = path.join(__dirname, './matrix.json')
@@ -48,10 +47,8 @@ function createWindow() {
     fs.writeFile(filePath, JSON.stringify(data), (err) => {
       if (err) {
         console.error(err)
-        // Send an error message back to the renderer process if needed
         event.reply('save-json-response', { success: false, error: err.message })
       } else {
-        // Send a success message back to the renderer process if needed
         event.reply('save-json-response', { success: true })
       }
     })

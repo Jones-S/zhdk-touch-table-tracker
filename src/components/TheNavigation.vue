@@ -14,17 +14,18 @@ import { ref, onMounted, toRaw } from 'vue'
 </template>
 
 <style scoped>
-.canvas {
-  width: 100%;
-  height: 100%;
+header {
+  z-index: 100;
+  position: fixed;
 }
 
-.controls {
-  padding: 15px;
+ul {
+  list-style: none;
+  display: flex;
+  padding: 0.7em 0 0 0.7em;
 }
 
-.fallback-message {
-  margin: 0 auto;
-  text-align: center;
+li {
+  margin-right: 1em;
 }
 </style>
