@@ -11,6 +11,8 @@ window.addEventListener('DOMContentLoaded', () => {
 })
 
 contextBridge.exposeInMainWorld('electron', {
-  saveJson: (json) => ipcRenderer.send('save-json', json),
+  saveJson: (json) => {
+    ipcRenderer.send('save-json', json)
+  },
   onJsonSaved: (callback) => ipcRenderer.on('save-json-reply', callback)
 })

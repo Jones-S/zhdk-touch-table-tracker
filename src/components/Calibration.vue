@@ -42,7 +42,6 @@ function handleMouseDown(event) {
 }
 
 const handleMouseMove = (event) => {
-  console.log('selectedPoint.value: ', selectedPoint.value)
   if (selectedPoint.value !== null && selectedPoint.value !== -1) {
     const mouseX = event.clientX - canvas.value.getBoundingClientRect().left
     const mouseY = event.clientY - canvas.value.getBoundingClientRect().top
@@ -64,7 +63,9 @@ const handleMouseRightClick = (event) => {
   const poi = { x: mouseX, y: mouseY }
   mapPoint(trapezPoints.value, poi)
 
-  saveJsonToFile({ data: 'this-is-it' })
+  const resultMatrix = getInvertedMatrix(trapezPoints.value)
+
+  saveJsonToFile({ matrix: resultMatrix })
 }
 
 const saveJsonToFile = (data) => {
@@ -109,7 +110,7 @@ const hitTest = (x, y, trapezium) => {
   return -1
 }
 
-const mapPoint = (trapezium, point) => {
+const getInvertedMatrix = (trapezium) => {
   // First, find the transformation matrix for our deformed rectangle
   // [a b c]
   // [d e f]
@@ -145,12 +146,16 @@ const mapPoint = (trapezium, point) => {
   ]
 
   // Find the inverse of the matrix
-  let inv = math.inv(transformMatrix)
-  //console.log(JSON.stringify(inv));
+  return math.inv(transformMatrix)
+}
 
+const mapPoint = (trapezium, point) => {
+  const inv = getInvertedMatrix(trapezium)
   let pointMatrix = [point.x, point.y, 1]
   let resultMatrix = math.multiply(pointMatrix, inv)
+
   console.log(JSON.stringify(resultMatrix))
+
   const resultPoint = {
     x: resultMatrix[0] / resultMatrix[2],
     y: resultMatrix[1] / resultMatrix[2]

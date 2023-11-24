@@ -9,7 +9,7 @@ function radiansToDegrees(radians) {
 }
 
 function startServers() {
-  let websocket
+  let websocket = false
   let trackerCollection = []
   let firstMessageReceived = false
 
@@ -136,7 +136,7 @@ function startServers() {
   })
 
   setTimeout(() => {
-    if (!firstMessageReceived) {
+    if (!firstMessageReceived && websocket) {
       websocket.send(
         JSON.stringify({
           type: '/tracker/error',
