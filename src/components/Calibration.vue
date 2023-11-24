@@ -3,9 +3,10 @@
  * Inspired by GPT-4 and:
  * https://math.stackexchange.com/questions/3037040/normalized-coordinate-of-point-on-4-sided-concave-polygon/3039140#3039140
  * https://jsfiddle.net/fhzrd380/
+ * https://www.geometrictools.com/Documentation/PerspectiveMappings.pdf
  *
  */
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, toRaw } from 'vue'
 import { WebCamUI } from 'vue-camera-lib'
 import * as math from 'mathjs'
 
@@ -22,7 +23,7 @@ const trapezPoints = ref([
 const photoTaken = (data) => {
   image.value = data.image_data_url
 
-  drawTrapezium()
+  draw()
 }
 
 // Function to handle mouse clicks and update trapezium points
@@ -35,38 +36,52 @@ function handleMouseClick(event) {
   trapezPoints.value.shift() // Remove the oldest point
   trapezPoints.value.push({ x: mouseX, y: mouseY }) // Add the new point
 
-  // Redraw the trapezium
-  drawTrapezium()
+  draw()
 }
 
-const drawTrapezium = () => {
+function handleMouseRightClick(event) {
+  const rect = canvas.value.getBoundingClientRect()
+  const mouseX = event.clientX - rect.left
+  const mouseY = event.clientY - rect.top
+  const poi = { x: mouseX, y: mouseY }
+  console.log('poi: ', poi)
+  console.log('trapezPoints.value: ', toRaw(trapezPoints.value))
+  mapPoint(trapezPoints.value, poi)
+}
+
+const draw = () => {
   ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
-  ctx.value.fillStyle = 'blue'
-  ctx.value.fillRect(0, 0, canvas.value.width, canvas.value.height)
 
-  ctx.value.beginPath()
-  ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
-  for (const point of trapezPoints.value) {
-    ctx.value.lineTo(point.x, point.y)
+  const background = new Image()
+  background.src = image.value
+
+  background.onload = function () {
+    ctx.value.drawImage(background, 0, 0, canvas.value.width, canvas.value.height)
+
+    ctx.value.beginPath()
+    ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
+    for (const point of trapezPoints.value) {
+      ctx.value.lineTo(point.x, point.y)
+    }
+    ctx.value.closePath()
+    ctx.value.stroke()
   }
-  ctx.value.closePath()
-  ctx.value.stroke()
 }
 
-const mapPoint = (trapezium, resultRectangle, point) => {
+const mapPoint = (trapezium, point) => {
   // First, find the transformation matrix for our deformed rectangle
   // [a b c]
   // [d e f]
   // [g h 1]
 
-  let x0 = trapezium.p1.x
-  let y0 = trapezium.p1.y
-  let x1 = trapezium.p2.x
-  let y1 = trapezium.p2.y
-  let x2 = trapezium.p3.x
-  let y2 = trapezium.p3.y
-  let x3 = trapezium.p4.x
-  let y3 = trapezium.p4.y
+  let x0 = trapezium[0].x
+  let y0 = trapezium[0].y
+  let x1 = trapezium[1].x
+  let y1 = trapezium[1].y
+  let x2 = trapezium[2].x
+  let y2 = trapezium[2].y
+  let x3 = trapezium[3].x
+  let y3 = trapezium[3].y
 
   let dx1 = x1 - x2
   let dx2 = x3 - x2
@@ -94,7 +109,7 @@ const mapPoint = (trapezium, resultRectangle, point) => {
   let inv = math.inv(transformMatrix)
   //console.log(JSON.stringify(inv));
 
-  let pointMatrix = [point[0], point[1], 1]
+  let pointMatrix = [point.x, point.y, 1]
   let resultMatrix = math.multiply(pointMatrix, inv)
   console.log(JSON.stringify(resultMatrix))
   const resultPoint = {
@@ -107,33 +122,16 @@ const mapPoint = (trapezium, resultRectangle, point) => {
 onMounted(() => {
   ctx.value = canvas.value.getContext('2d')
   canvas.value.addEventListener('click', handleMouseClick)
-
-  let rect = {
-    p1: { x: 0, y: 0.25 },
-    p2: { x: 0.5, y: 0 },
-    p3: { x: 0.5, y: 1 },
-    p4: { x: 0, y: 1 }
-  }
-
-  let resultRect = {
-    p1: { x: 0, y: 0 },
-    p2: { x: 1, y: 0 },
-    p3: { x: 1, y: 1 },
-    p4: { x: 0, y: 1 }
-  }
-  const point = [0.5, 0.5]
-  const mapped = mapPoint(rect, resultRect, point)
-  console.log('mapped: ', mapped)
+  canvas.value.addEventListener('contextmenu', handleMouseRightClick)
 })
 </script>
 
 <template>
   <div>Calibration in here</div>
-  <button @click="test">mapPoint</button>
   <WebCamUI class="webcamui" v-if="!image" :fullscreenState="false" @photoTaken="photoTaken" />
 
-  <img v-if="image" :src="image" />
-  <canvas ref="canvas" width="800" height="600"></canvas>
+  <!-- <img v-if="image" :src="image" /> -->
+  <canvas v-show="image" ref="canvas" width="800" height="600"></canvas>
 </template>
 
 <style scoped>
