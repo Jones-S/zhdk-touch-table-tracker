@@ -13,12 +13,15 @@ import * as math from 'mathjs'
 const image = ref(false)
 const canvas = ref(null)
 const ctx = ref(null)
+const selectedPoint = ref(null)
 const trapezPoints = ref([
   { x: 100, y: 100 },
   { x: 200, y: 100 },
   { x: 250, y: 200 },
   { x: 150, y: 200 }
 ])
+
+const handlerSize = 12
 
 const photoTaken = (data) => {
   image.value = data.image_data_url
@@ -27,19 +30,38 @@ const photoTaken = (data) => {
 }
 
 // Function to handle mouse clicks and update trapezium points
-function handleMouseClick(event) {
+function handleMouseDown(event) {
   const rect = canvas.value.getBoundingClientRect()
   const mouseX = event.clientX - rect.left
   const mouseY = event.clientY - rect.top
 
-  // Update the trapezium points
-  trapezPoints.value.shift() // Remove the oldest point
-  trapezPoints.value.push({ x: mouseX, y: mouseY }) // Add the new point
+  selectedPoint.value = hitTest(mouseX, mouseY, trapezPoints.value)
+  console.log('selectedPoint.value: ', selectedPoint.value)
+
+  // // Update the trapezium points
+  // trapezPoints.value.shift() // Remove the oldest point
+  // trapezPoints.value.push({ x: mouseX, y: mouseY }) // Add the new point
 
   draw()
 }
 
-function handleMouseRightClick(event) {
+const handleMouseMove = (event) => {
+  console.log('selectedPoint.value: ', selectedPoint.value)
+  if (selectedPoint.value !== null && selectedPoint.value !== -1) {
+    const mouseX = event.clientX - canvas.value.getBoundingClientRect().left
+    const mouseY = event.clientY - canvas.value.getBoundingClientRect().top
+
+    trapezPoints.value[selectedPoint.value].x = mouseX
+    trapezPoints.value[selectedPoint.value].y = mouseY
+    draw()
+  }
+}
+
+const handleMouseUp = () => {
+  selectedPoint.value = null
+}
+
+const handleMouseRightClick = (event) => {
   const rect = canvas.value.getBoundingClientRect()
   const mouseX = event.clientX - rect.left
   const mouseY = event.clientY - rect.top
@@ -58,13 +80,31 @@ const draw = () => {
 
     ctx.value.beginPath()
     ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
+
     for (const [index, point] of trapezPoints.value.entries()) {
-      ctx.value.fillText(index, point.x, point.y)
+      ctx.value.fillText(index, point.x + 10, point.y + 10)
       ctx.value.lineTo(point.x, point.y)
     }
     ctx.value.closePath()
     ctx.value.stroke()
+
+    for (const [index, point] of trapezPoints.value.entries()) {
+      ctx.value.beginPath()
+      ctx.value.arc(point.x, point.y, handlerSize, 0, 2 * Math.PI)
+      ctx.value.fill()
+    }
   }
+}
+
+const hitTest = (x, y, trapezium) => {
+  for (let i = 0; i < trapezium.length; i++) {
+    const point = trapezium[i]
+    const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2)
+    if (distance <= handlerSize + 5) {
+      return i
+    }
+  }
+  return -1
 }
 
 const mapPoint = (trapezium, point) => {
@@ -118,7 +158,9 @@ const mapPoint = (trapezium, point) => {
 
 onMounted(() => {
   ctx.value = canvas.value.getContext('2d')
-  canvas.value.addEventListener('click', handleMouseClick)
+  canvas.value.addEventListener('mousedown', handleMouseDown)
+  canvas.value.addEventListener('mousemove', handleMouseMove)
+  canvas.value.addEventListener('mouseup', handleMouseUp)
   canvas.value.addEventListener('contextmenu', handleMouseRightClick)
 })
 </script>
