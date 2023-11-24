@@ -38,10 +38,6 @@ function handleMouseDown(event) {
   selectedPoint.value = hitTest(mouseX, mouseY, trapezPoints.value)
   console.log('selectedPoint.value: ', selectedPoint.value)
 
-  // // Update the trapezium points
-  // trapezPoints.value.shift() // Remove the oldest point
-  // trapezPoints.value.push({ x: mouseX, y: mouseY }) // Add the new point
-
   draw()
 }
 
@@ -67,11 +63,17 @@ const handleMouseRightClick = (event) => {
   const mouseY = event.clientY - rect.top
   const poi = { x: mouseX, y: mouseY }
   mapPoint(trapezPoints.value, poi)
+
+  saveJsonToFile({ data: 'this-is-it' })
+}
+
+const saveJsonToFile = (data) => {
+  console.log('data: ', data)
+  console.log('window.electron: ', window.electron)
+  window.electron.saveJson(data)
 }
 
 const draw = () => {
-  // ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
-
   const background = new Image()
   background.src = image.value
 
@@ -162,6 +164,14 @@ onMounted(() => {
   canvas.value.addEventListener('mousemove', handleMouseMove)
   canvas.value.addEventListener('mouseup', handleMouseUp)
   canvas.value.addEventListener('contextmenu', handleMouseRightClick)
+
+  window.electron.onJsonSaved((event, status) => {
+    if (status === 'success') {
+      console.log('JSON saved successfully!')
+    } else {
+      console.error('Failed to save JSON')
+    }
+  })
 })
 </script>
 

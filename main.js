@@ -6,7 +6,7 @@
  */
 
 /* eslint-disable no-undef */
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const startServers = require('./src/websocket/server.js')
 
 const url = require('url')
@@ -14,12 +14,17 @@ const path = require('path')
 
 let mainWindow
 
+const preloadPath = path.join(__dirname, './preload.js')
+console.log(preloadPath) // Check if the path printed is correct
+
 function createWindow() {
   mainWindow = new BrowserWindow({
+    // preload: preloadPath,
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: true
     }
   })
 
@@ -32,6 +37,24 @@ function createWindow() {
   )
   mainWindow.on('closed', function () {
     mainWindow = null
+  })
+
+  // Listen for 'save-json' message from renderer process
+  ipcMain.on('save-json', (event, data) => {
+    // Perform file system operation to save the JSON file
+    const filePath = './matrix.json'
+    console.log('data: ', data)
+
+    // fs.writeFile(filePath, JSON.stringify(data), (err) => {
+    //   if (err) {
+    //     console.error(err)
+    //     // Send an error message back to the renderer process if needed
+    //     event.reply('save-json-response', { success: false, error: err.message })
+    //   } else {
+    //     // Send a success message back to the renderer process if needed
+    //     event.reply('save-json-response', { success: true })
+    //   }
+    // })
   })
 }
 app.on('ready', createWindow)
