@@ -1,7 +1,13 @@
 <script setup>
+/*
+ * Inspired by GPT-4 and:
+ * https://math.stackexchange.com/questions/3037040/normalized-coordinate-of-point-on-4-sided-concave-polygon/3039140#3039140
+ * https://jsfiddle.net/fhzrd380/
+ *
+ */
 import { ref, onMounted } from 'vue'
 import { WebCamUI } from 'vue-camera-lib'
-import { inv, multiply } from 'mathjs'
+import * as math from 'mathjs'
 
 const image = ref(false)
 const canvas = ref(null)
@@ -33,52 +39,11 @@ function handleMouseClick(event) {
   drawTrapezium()
 }
 
-// Function to calculate the projective mapping matrix
-const calculateMappingMatrix = () => {
-  const A = []
-  const B = []
-
-  for (let i = 0; i < 4; ++i) {
-    const pointT = trapezPoints.value[i]
-    const pointS = { x: i === 0 || i === 3 ? 0 : 1, y: i === 0 || i === 1 ? 0 : 1 }
-
-    A.push([pointT.x, pointT.y, 1, 0, 0, 0, -pointS.x * pointT.x, -pointS.x * pointT.y])
-    A.push([0, 0, 0, pointT.x, pointT.y, 1, -pointS.y * pointT.x, -pointS.y * pointT.y])
-
-    B.push(pointS.x)
-    B.push(pointS.y)
-  }
-
-  const AInv = inv(A)
-  const X = multiply(AInv, B)
-
-  // Generate matrix M
-  X.push(1)
-  const M = []
-  for (let i = 0; i < 3; ++i) {
-    M.push([X[3 * i], X[3 * i + 1], X[3 * i + 2]])
-  }
-
-  return M
-}
-
-// Example usage of the mapping matrix
-const mapPoint = (point) => {
-  const M = calculateMappingMatrix()
-  const homogenousPoint = [...point, 1]
-  const screenPoint = multiply(M, homogenousPoint)
-  const mappedPoint = [screenPoint[0] / screenPoint[2], screenPoint[1] / screenPoint[2]]
-
-  // Print the mapped point
-  console.log('Mapped Point:', mappedPoint)
-}
-
-const test = () => {
-  mapPoint([0.8, 0.65])
-}
-
 const drawTrapezium = () => {
   ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
+  ctx.value.fillStyle = 'blue'
+  ctx.value.fillRect(0, 0, canvas.value.width, canvas.value.height)
+
   ctx.value.beginPath()
   ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
   for (const point of trapezPoints.value) {
@@ -88,19 +53,87 @@ const drawTrapezium = () => {
   ctx.value.stroke()
 }
 
+const mapPoint = (trapezium, resultRectangle, point) => {
+  // First, find the transformation matrix for our deformed rectangle
+  // [a b c]
+  // [d e f]
+  // [g h 1]
+
+  let x0 = trapezium.p1.x
+  let y0 = trapezium.p1.y
+  let x1 = trapezium.p2.x
+  let y1 = trapezium.p2.y
+  let x2 = trapezium.p3.x
+  let y2 = trapezium.p3.y
+  let x3 = trapezium.p4.x
+  let y3 = trapezium.p4.y
+
+  let dx1 = x1 - x2
+  let dx2 = x3 - x2
+  let dx3 = x0 - x1 + x2 - x3
+  let dy1 = y1 - y2
+  let dy2 = y3 - y2
+  let dy3 = y0 - y1 + y2 - y3
+
+  let a13 = (dx3 * dy2 - dy3 * dx2) / (dx1 * dy2 - dy1 * dx2)
+  let a23 = (dx1 * dy3 - dy1 * dx3) / (dx1 * dy2 - dy1 * dx2)
+  let a11 = x1 - x0 + a13 * x1
+  let a21 = x3 - x0 + a23 * x3
+  let a31 = x0
+  let a12 = y1 - y0 + a13 * y1
+  let a22 = y3 - y0 + a23 * y3
+  let a32 = y0
+
+  let transformMatrix = [
+    [a11, a12, a13],
+    [a21, a22, a23],
+    [a31, a32, 1]
+  ]
+
+  // Find the inverse of the matrix
+  let inv = math.inv(transformMatrix)
+  //console.log(JSON.stringify(inv));
+
+  let pointMatrix = [point[0], point[1], 1]
+  let resultMatrix = math.multiply(pointMatrix, inv)
+  console.log(JSON.stringify(resultMatrix))
+  const resultPoint = {
+    x: resultMatrix[0] / resultMatrix[2],
+    y: resultMatrix[1] / resultMatrix[2]
+  }
+  return resultPoint
+}
+
 onMounted(() => {
   ctx.value = canvas.value.getContext('2d')
   canvas.value.addEventListener('click', handleMouseClick)
+
+  let rect = {
+    p1: { x: 0, y: 0.25 },
+    p2: { x: 0.5, y: 0 },
+    p3: { x: 0.5, y: 1 },
+    p4: { x: 0, y: 1 }
+  }
+
+  let resultRect = {
+    p1: { x: 0, y: 0 },
+    p2: { x: 1, y: 0 },
+    p3: { x: 1, y: 1 },
+    p4: { x: 0, y: 1 }
+  }
+  const point = [0.5, 0.5]
+  const mapped = mapPoint(rect, resultRect, point)
+  console.log('mapped: ', mapped)
 })
 </script>
 
 <template>
   <div>Calibration in here</div>
+  <button @click="test">mapPoint</button>
   <WebCamUI class="webcamui" v-if="!image" :fullscreenState="false" @photoTaken="photoTaken" />
 
   <img v-if="image" :src="image" />
   <canvas ref="canvas" width="800" height="600"></canvas>
-  <button @click="test">mapPoint</button>
 </template>
 
 <style scoped>
