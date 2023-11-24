@@ -44,13 +44,11 @@ function handleMouseRightClick(event) {
   const mouseX = event.clientX - rect.left
   const mouseY = event.clientY - rect.top
   const poi = { x: mouseX, y: mouseY }
-  console.log('poi: ', poi)
-  console.log('trapezPoints.value: ', toRaw(trapezPoints.value))
   mapPoint(trapezPoints.value, poi)
 }
 
 const draw = () => {
-  ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
+  // ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
 
   const background = new Image()
   background.src = image.value
@@ -60,7 +58,8 @@ const draw = () => {
 
     ctx.value.beginPath()
     ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
-    for (const point of trapezPoints.value) {
+    for (const [index, point] of trapezPoints.value.entries()) {
+      ctx.value.fillText(index, point.x, point.y)
       ctx.value.lineTo(point.x, point.y)
     }
     ctx.value.closePath()
@@ -94,15 +93,13 @@ const mapPoint = (trapezium, point) => {
   let a23 = (dx1 * dy3 - dy1 * dx3) / (dx1 * dy2 - dy1 * dx2)
   let a11 = x1 - x0 + a13 * x1
   let a21 = x3 - x0 + a23 * x3
-  let a31 = x0
   let a12 = y1 - y0 + a13 * y1
   let a22 = y3 - y0 + a23 * y3
-  let a32 = y0
 
   let transformMatrix = [
     [a11, a12, a13],
     [a21, a22, a23],
-    [a31, a32, 1]
+    [x0, y0, 1]
   ]
 
   // Find the inverse of the matrix
