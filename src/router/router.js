@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
@@ -14,7 +14,9 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  // not using the default createWebHistory, because reloading the built app in electron with fail
+  // https://stackoverflow.com/a/56995887/1121268
+  history: createWebHashHistory(),
   routes
 })
 

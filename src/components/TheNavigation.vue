@@ -30,4 +30,8 @@ ul {
 li {
   margin-right: 1em;
 }
+
+.router-link-active {
+  text-decoration: underline;
+}
 </style>
