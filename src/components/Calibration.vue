@@ -15,18 +15,13 @@ const canvas = ref(null)
 const ctx = ref(null)
 const selectedPoint = ref(null)
 const aspectRatio = ref(null)
-const trapezPoints = ref([
-  { x: 100, y: 100 },
-  { x: 200, y: 100 },
-  { x: 250, y: 200 },
-  { x: 150, y: 200 }
-])
+const trapezPoints = ref(null)
 
 const handlerSize = 12
 
 const photoTaken = (data) => {
   image.value = data.image_data_url
-
+  setInitialTrapezium()
   draw()
 }
 
@@ -55,18 +50,14 @@ const handleMouseUp = () => {
   selectedPoint.value = null
 }
 
-const calc = () => {
-  const poi = { x: 0.5, y: 0.5 }
-  console.log('poi: ', poi)
-  const trapezy01 = trapezPoints.value.map((p) => {
-    return {
-      x: p.x / canvas.value.width,
-      y: p.y / canvas.value.height
-    }
-  })
-  console.log('trapezy01: ', trapezy01)
-  const mapy = mapPoint(trapezy01, poi)
-  console.log('mapy: ', mapy)
+const setInitialTrapezium = () => {
+  const padding = 40
+  trapezPoints.value = [
+    { x: padding, y: padding },
+    { x: canvas.value.width - padding, y: padding },
+    { x: canvas.value.width - padding, y: canvas.value.height - padding },
+    { x: padding, y: canvas.value.height - padding }
+  ]
 }
 
 const save = () => {
@@ -82,7 +73,11 @@ const save = () => {
 }
 
 const saveJsonToFile = (data) => {
-  window.electron.saveJson(data)
+  if (window?.electron) {
+    window.electron.saveJson(data)
+  } else {
+    console.info('If used in electron/node.js, we would save matrix: ', data, ' to a config file.')
+  }
 }
 
 const draw = () => {
@@ -116,7 +111,7 @@ const hitTest = (x, y, trapezium) => {
   for (let i = 0; i < trapezium.length; i++) {
     const point = trapezium[i]
     const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2)
-    if (distance <= handlerSize * devicePixelRatio + 5) {
+    if (distance <= handlerSize * devicePixelRatio + 5 * devicePixelRatio) {
       return i
     }
   }
@@ -162,42 +157,27 @@ const getInvertedMatrix = (trapezium) => {
   return math.inv(transformMatrix)
 }
 
-const mapPoint = (trapezium, point) => {
-  const inv = getInvertedMatrix(trapezium)
-  const pointMatrix = [point.x, point.y, 1]
-  const resultMatrix = math.multiply(pointMatrix, inv)
-
-  console.log(JSON.stringify(resultMatrix))
-
-  const resultPoint = {
-    x: resultMatrix[0] / resultMatrix[2],
-    y: resultMatrix[1] / resultMatrix[2]
-  }
-  return resultPoint
-}
-
 const setCanvasSize = () => {
-  if (!aspectRatio.value) {
-    // get the webcams aspect ratio to set the canvas size accordingly
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-      // Get the video track from the stream
-      const videoTrack = stream.getVideoTracks()[0]
+  // get the webcams aspect ratio to set the canvas size accordingly
+  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+    // Get the video track from the stream
+    const videoTrack = stream.getVideoTracks()[0]
 
-      // Get the settings of the video track
-      const settings = videoTrack.getSettings()
+    // Get the settings of the video track
+    const settings = videoTrack.getSettings()
 
-      // Calculate the aspect ratio
-      aspectRatio.value = settings.width / settings.height
+    // Calculate the aspect ratio
+    aspectRatio.value = settings.width / settings.height
 
-      const screenDensity = window.devicePixelRatio
-      canvas.value.width = screenDensity * window.innerWidth
-      canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
-    })
-  }
+    const screenDensity = window.devicePixelRatio
+    canvas.value.width = screenDensity * window.innerWidth
+    canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
+  })
 }
 
 const handleResize = () => {
-  // setUpCanvas()
+  setUpCanvas()
+  setInitialTrapezium()
   // draw()
   image.value = false
 }
@@ -207,8 +187,10 @@ const setCamera = () => {
 }
 
 const setUpCanvas = () => {
-  ctx.value = canvas.value.getContext('2d')
-  setCanvasSize()
+  if (canvas.value) {
+    ctx.value = canvas.value.getContext('2d')
+    setCanvasSize()
+  }
 }
 
 onMounted(() => {
@@ -242,7 +224,6 @@ onMounted(() => {
 
   <div v-show="image">
     <canvas ref="canvas"></canvas>
-    <button class="save calc" @click="calc">Calc</button>
     <button class="save" @click="save">Save</button>
   </div>
 </template>
@@ -300,10 +281,6 @@ canvas {
   box-shadow: 0 0 2px var(--vt-c-white-soft);
   transition: all 0.3s;
   font-size: 13px;
-}
-
-.calc {
-  right: 140px;
 }
 
 .save:hover {

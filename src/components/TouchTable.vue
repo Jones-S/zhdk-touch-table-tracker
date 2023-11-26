@@ -85,7 +85,7 @@ const connectToWebsocketServer = () => {
 
       udpateToken({ ...msg.args, x: resultPoint.x, y: resultPoint.y })
     } else if (msg.type === '/tracker/error') {
-      alert('Error: No connection could be established to the reacTIVision app.')
+      console.error('Error: No connection could be established to the reacTIVision app.')
     }
   }
 }
