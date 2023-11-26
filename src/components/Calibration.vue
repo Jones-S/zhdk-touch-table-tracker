@@ -55,16 +55,29 @@ const handleMouseUp = () => {
   selectedPoint.value = null
 }
 
-const handleMouseRightClick = (event) => {
+const calc = () => {
+  const poi = { x: 0.5, y: 0.5 }
+  console.log('poi: ', poi)
+  const trapezy01 = trapezPoints.value.map((p) => {
+    return {
+      x: p.x / canvas.value.width,
+      y: p.y / canvas.value.height
+    }
+  })
+  console.log('trapezy01: ', trapezy01)
+  const mapy = mapPoint(trapezy01, poi)
+  console.log('mapy: ', mapy)
+}
+
+const save = () => {
   const rect = canvas.value.getBoundingClientRect()
-  const mouseX = event.clientX - rect.left
-  const mouseY = event.clientY - rect.top
-  const poi = { x: mouseX, y: mouseY }
+  const poi = { x: 0.5, y: 0.5 }
+  console.log('poi: ', poi)
   mapPoint(trapezPoints.value, poi)
 
-  const resultMatrix = getInvertedMatrix(trapezPoints.value)
+  const invertedMatrix = getInvertedMatrix(trapezPoints.value)
 
-  saveJsonToFile({ matrix: resultMatrix })
+  saveJsonToFile({ matrix: invertedMatrix })
 }
 
 const saveJsonToFile = (data) => {
@@ -78,6 +91,8 @@ const draw = () => {
   background.onload = function () {
     ctx.value.drawImage(background, 0, 0, canvas.value.width, canvas.value.height)
 
+    ctx.value.lineWidth = 1 * devicePixelRatio
+    ctx.value.strokeStyle = 'red'
     ctx.value.beginPath()
     ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
 
@@ -113,30 +128,30 @@ const getInvertedMatrix = (trapezium) => {
   // [d e f]
   // [g h 1]
 
-  let x0 = trapezium[0].x
-  let y0 = trapezium[0].y
-  let x1 = trapezium[1].x
-  let y1 = trapezium[1].y
-  let x2 = trapezium[2].x
-  let y2 = trapezium[2].y
-  let x3 = trapezium[3].x
-  let y3 = trapezium[3].y
+  const x0 = trapezium[0].x
+  const y0 = trapezium[0].y
+  const x1 = trapezium[1].x
+  const y1 = trapezium[1].y
+  const x2 = trapezium[2].x
+  const y2 = trapezium[2].y
+  const x3 = trapezium[3].x
+  const y3 = trapezium[3].y
 
-  let dx1 = x1 - x2
-  let dx2 = x3 - x2
-  let dx3 = x0 - x1 + x2 - x3
-  let dy1 = y1 - y2
-  let dy2 = y3 - y2
-  let dy3 = y0 - y1 + y2 - y3
+  const dx1 = x1 - x2
+  const dx2 = x3 - x2
+  const dx3 = x0 - x1 + x2 - x3
+  const dy1 = y1 - y2
+  const dy2 = y3 - y2
+  const dy3 = y0 - y1 + y2 - y3
 
-  let a13 = (dx3 * dy2 - dy3 * dx2) / (dx1 * dy2 - dy1 * dx2)
-  let a23 = (dx1 * dy3 - dy1 * dx3) / (dx1 * dy2 - dy1 * dx2)
-  let a11 = x1 - x0 + a13 * x1
-  let a21 = x3 - x0 + a23 * x3
-  let a12 = y1 - y0 + a13 * y1
-  let a22 = y3 - y0 + a23 * y3
+  const a13 = (dx3 * dy2 - dy3 * dx2) / (dx1 * dy2 - dy1 * dx2)
+  const a23 = (dx1 * dy3 - dy1 * dx3) / (dx1 * dy2 - dy1 * dx2)
+  const a11 = x1 - x0 + a13 * x1
+  const a21 = x3 - x0 + a23 * x3
+  const a12 = y1 - y0 + a13 * y1
+  const a22 = y3 - y0 + a23 * y3
 
-  let transformMatrix = [
+  const transformMatrix = [
     [a11, a12, a13],
     [a21, a22, a23],
     [x0, y0, 1]
@@ -148,8 +163,8 @@ const getInvertedMatrix = (trapezium) => {
 
 const mapPoint = (trapezium, point) => {
   const inv = getInvertedMatrix(trapezium)
-  let pointMatrix = [point.x, point.y, 1]
-  let resultMatrix = math.multiply(pointMatrix, inv)
+  const pointMatrix = [point.x, point.y, 1]
+  const resultMatrix = math.multiply(pointMatrix, inv)
 
   console.log(JSON.stringify(resultMatrix))
 
@@ -192,7 +207,6 @@ onMounted(() => {
   canvas.value.addEventListener('mousedown', handleMouseDown)
   canvas.value.addEventListener('mousemove', handleMouseMove)
   canvas.value.addEventListener('mouseup', handleMouseUp)
-  canvas.value.addEventListener('contextmenu', handleMouseRightClick)
 
   if (window?.electron) {
     window.electron.onJsonSaved((event, status) => {
@@ -216,7 +230,11 @@ onMounted(() => {
     :fullscreen-button="{}"
   />
 
-  <canvas v-show="image" ref="canvas"></canvas>
+  <div v-show="image">
+    <canvas ref="canvas"></canvas>
+    <button class="save calc" @click="calc">Calc</button>
+    <button class="save" @click="save">Save</button>
+  </div>
 </template>
 
 <style scoped>
@@ -224,29 +242,62 @@ img {
   width: 100%;
 }
 
-.webcam-ui {
+.webcamui {
+  margin-top: 46px;
   width: 100%;
-  max-width: 40vw;
 }
 
-.webcamui::v-deep .flex div {
+.webcamui:deep(.flex div) {
   margin-right: 1em;
 }
 
-.webcamui::v-deep select {
+/* .webcamui:deep(video) {
+  filter: grayscale(100%);
+} */
+
+.webcamui:deep(select) {
   height: 100%;
+  border-radius: 2px;
 }
 
-.webcamui::v-deep button {
+.webcamui:deep(button) {
   background-color: var(--color-active);
   color: var(--vt-c-black);
+  border-radius: 2px;
 }
 
-.webcamui::v-deep button:hover {
+.webcamui:deep(button:hover) {
   background-color: var(--color-highlight);
 }
 
 canvas {
+  margin-top: 46px;
   width: 100vw;
+}
+
+.save {
+  position: fixed;
+  top: 0.7em;
+  right: 0.7em;
+  font-family: jetbrains-medium;
+  text-align: center;
+  background: var(--color-active);
+  border: 1px solid var(--vt-c-black-soft);
+  border-radius: 2px;
+  color: var(--vt-c-black-soft);
+  padding: 0.3em 0.7em;
+  margin-bottom: 0.6em;
+  box-shadow: 0 0 2px var(--vt-c-white-soft);
+  transition: all 0.3s;
+  font-size: 13px;
+}
+
+.calc {
+  right: 140px;
+}
+
+.save:hover {
+  cursor: pointer;
+  background-color: var(--color-highlight);
 }
 </style>

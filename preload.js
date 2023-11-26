@@ -14,5 +14,8 @@ contextBridge.exposeInMainWorld('electron', {
   saveJson: (json) => {
     ipcRenderer.send('save-json', json)
   },
+  loadConfig: () => {
+    return ipcRenderer.invoke('load-config')
+  },
   onJsonSaved: (callback) => ipcRenderer.on('save-json-reply', callback)
 })

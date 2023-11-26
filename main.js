@@ -53,6 +53,31 @@ function createWindow() {
       }
     })
   })
+
+  ipcMain.handle('load-config', () => {
+    return new Promise((resolve, reject) => {
+      // Perform file system operation to save the JSON file
+      const filePath = path.join(__dirname, './matrix.json')
+
+      fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+          console.error('err', err)
+          console.info('No matrix calibration file found. Returning default matrix.')
+          const defaultMatrix = {
+            matrix: [
+              [1, 1, 1],
+              [1, 1, 1],
+              [1, 1, 1]
+            ]
+          }
+          resolve(defaultMatrix)
+        }
+        const jsonData = JSON.parse(data)
+        console.log('jsonData: ', jsonData)
+        resolve(jsonData)
+      })
+    })
+  })
 }
 app.on('ready', createWindow)
 
