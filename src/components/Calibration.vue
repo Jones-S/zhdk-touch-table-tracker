@@ -70,12 +70,13 @@ const calc = () => {
 }
 
 const save = () => {
-  const rect = canvas.value.getBoundingClientRect()
-  const poi = { x: 0.5, y: 0.5 }
-  console.log('poi: ', poi)
-  mapPoint(trapezPoints.value, poi)
-
-  const invertedMatrix = getInvertedMatrix(trapezPoints.value)
+  const normalizedTrapezium = trapezPoints.value.map((p) => {
+    return {
+      x: p.x / canvas.value.width,
+      y: p.y / canvas.value.height
+    }
+  })
+  const invertedMatrix = getInvertedMatrix(normalizedTrapezium)
 
   saveJsonToFile({ matrix: invertedMatrix })
 }
@@ -176,21 +177,29 @@ const mapPoint = (trapezium, point) => {
 }
 
 const setCanvasSize = () => {
-  // get the webcams aspect ratio to set the canvas size accordingly
-  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-    // Get the video track from the stream
-    const videoTrack = stream.getVideoTracks()[0]
+  if (!aspectRatio.value) {
+    // get the webcams aspect ratio to set the canvas size accordingly
+    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+      // Get the video track from the stream
+      const videoTrack = stream.getVideoTracks()[0]
 
-    // Get the settings of the video track
-    const settings = videoTrack.getSettings()
+      // Get the settings of the video track
+      const settings = videoTrack.getSettings()
 
-    // Calculate the aspect ratio
-    aspectRatio.value = settings.width / settings.height
+      // Calculate the aspect ratio
+      aspectRatio.value = settings.width / settings.height
 
-    const screenDensity = window.devicePixelRatio
-    canvas.value.width = screenDensity * window.innerWidth
-    canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
-  })
+      const screenDensity = window.devicePixelRatio
+      canvas.value.width = screenDensity * window.innerWidth
+      canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
+    })
+  }
+}
+
+const handleResize = () => {
+  // setUpCanvas()
+  // draw()
+  image.value = false
 }
 
 const setCamera = () => {
@@ -207,11 +216,12 @@ onMounted(() => {
   canvas.value.addEventListener('mousedown', handleMouseDown)
   canvas.value.addEventListener('mousemove', handleMouseMove)
   canvas.value.addEventListener('mouseup', handleMouseUp)
+  window.addEventListener('resize', handleResize)
 
   if (window?.electron) {
     window.electron.onJsonSaved((event, status) => {
-      if (status === 'success') {
-        console.log('JSON saved successfully!')
+      if (status.success === true) {
+        alert('Config saved successfully!')
       } else {
         console.error('Failed to save JSON')
       }

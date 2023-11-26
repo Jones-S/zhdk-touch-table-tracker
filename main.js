@@ -47,9 +47,9 @@ function createWindow() {
     fs.writeFile(filePath, JSON.stringify(data), (err) => {
       if (err) {
         console.error(err)
-        event.reply('save-json-response', { success: false, error: err.message })
+        event.reply('save-json-reply', { success: false, error: err.message })
       } else {
-        event.reply('save-json-response', { success: true })
+        event.reply('save-json-reply', { success: true })
       }
     })
   })
