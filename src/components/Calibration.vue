@@ -14,6 +14,7 @@ const image = ref(false)
 const canvas = ref(null)
 const ctx = ref(null)
 const selectedPoint = ref(null)
+const aspectRatio = ref(null)
 const trapezPoints = ref([
   { x: 100, y: 100 },
   { x: 200, y: 100 },
@@ -32,19 +33,17 @@ const photoTaken = (data) => {
 // Function to handle mouse clicks and update trapezium points
 function handleMouseDown(event) {
   const rect = canvas.value.getBoundingClientRect()
-  const mouseX = event.clientX - rect.left
-  const mouseY = event.clientY - rect.top
+  const mouseX = (event.clientX - rect.left) * devicePixelRatio
+  const mouseY = (event.clientY - rect.top) * devicePixelRatio
 
   selectedPoint.value = hitTest(mouseX, mouseY, trapezPoints.value)
-  console.log('selectedPoint.value: ', selectedPoint.value)
-
   draw()
 }
 
 const handleMouseMove = (event) => {
   if (selectedPoint.value !== null && selectedPoint.value !== -1) {
-    const mouseX = event.clientX - canvas.value.getBoundingClientRect().left
-    const mouseY = event.clientY - canvas.value.getBoundingClientRect().top
+    const mouseX = (event.clientX - canvas.value.getBoundingClientRect().left) * devicePixelRatio
+    const mouseY = (event.clientY - canvas.value.getBoundingClientRect().top) * devicePixelRatio
 
     trapezPoints.value[selectedPoint.value].x = mouseX
     trapezPoints.value[selectedPoint.value].y = mouseY
@@ -69,8 +68,6 @@ const handleMouseRightClick = (event) => {
 }
 
 const saveJsonToFile = (data) => {
-  console.log('data: ', data)
-  console.log('window.electron: ', window.electron)
   window.electron.saveJson(data)
 }
 
@@ -93,7 +90,7 @@ const draw = () => {
 
     for (const [index, point] of trapezPoints.value.entries()) {
       ctx.value.beginPath()
-      ctx.value.arc(point.x, point.y, handlerSize, 0, 2 * Math.PI)
+      ctx.value.arc(point.x, point.y, handlerSize * devicePixelRatio, 0, 2 * Math.PI)
       ctx.value.fill()
     }
   }
@@ -103,7 +100,7 @@ const hitTest = (x, y, trapezium) => {
   for (let i = 0; i < trapezium.length; i++) {
     const point = trapezium[i]
     const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2)
-    if (distance <= handlerSize + 5) {
+    if (distance <= handlerSize * devicePixelRatio + 5) {
       return i
     }
   }
@@ -163,8 +160,35 @@ const mapPoint = (trapezium, point) => {
   return resultPoint
 }
 
-onMounted(() => {
+const setCanvasSize = () => {
+  // get the webcams aspect ratio to set the canvas size accordingly
+  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+    // Get the video track from the stream
+    const videoTrack = stream.getVideoTracks()[0]
+
+    // Get the settings of the video track
+    const settings = videoTrack.getSettings()
+
+    // Calculate the aspect ratio
+    aspectRatio.value = settings.width / settings.height
+
+    const screenDensity = window.devicePixelRatio
+    canvas.value.width = screenDensity * window.innerWidth
+    canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
+  })
+}
+
+const setCamera = () => {
+  setUpCanvas()
+}
+
+const setUpCanvas = () => {
   ctx.value = canvas.value.getContext('2d')
+  setCanvasSize()
+}
+
+onMounted(() => {
+  setUpCanvas()
   canvas.value.addEventListener('mousedown', handleMouseDown)
   canvas.value.addEventListener('mousemove', handleMouseMove)
   canvas.value.addEventListener('mouseup', handleMouseUp)
@@ -188,7 +212,8 @@ onMounted(() => {
     v-if="!image"
     :fullscreenState="false"
     @photoTaken="photoTaken"
-    fullscreen-button="false"
+    @change="setCamera"
+    :fullscreen-button="{}"
   />
 
   <canvas v-show="image" ref="canvas"></canvas>
@@ -223,6 +248,5 @@ img {
 
 canvas {
   width: 100vw;
-  height: 100vh;
 }
 </style>
