@@ -15,23 +15,24 @@ const canvas = ref(null)
 const ctx = ref(null)
 const selectedPoint = ref(null)
 const aspectRatio = ref(null)
-const trapezPoints = ref(null)
+const quadrilateral = ref(null)
+const savedConfig = ref(null)
 
 const handlerSize = 12
 
 const photoTaken = (data) => {
   image.value = data.image_data_url
-  setInitialTrapezium()
+  quadrilateral.value = deNormalizeQuadrilateral(savedConfig.value.normalizedQuadrilateral)
   draw()
 }
 
-// Function to handle mouse clicks and update trapezium points
+// Function to handle mouse clicks and update quadriateral points
 function handleMouseDown(event) {
   const rect = canvas.value.getBoundingClientRect()
   const mouseX = (event.clientX - rect.left) * devicePixelRatio
   const mouseY = (event.clientY - rect.top) * devicePixelRatio
 
-  selectedPoint.value = hitTest(mouseX, mouseY, trapezPoints.value)
+  selectedPoint.value = hitTest(mouseX, mouseY, quadrilateral.value)
   draw()
 }
 
@@ -40,8 +41,8 @@ const handleMouseMove = (event) => {
     const mouseX = (event.clientX - canvas.value.getBoundingClientRect().left) * devicePixelRatio
     const mouseY = (event.clientY - canvas.value.getBoundingClientRect().top) * devicePixelRatio
 
-    trapezPoints.value[selectedPoint.value].x = mouseX
-    trapezPoints.value[selectedPoint.value].y = mouseY
+    quadrilateral.value[selectedPoint.value].x = mouseX
+    quadrilateral.value[selectedPoint.value].y = mouseY
     draw()
   }
 }
@@ -50,9 +51,9 @@ const handleMouseUp = () => {
   selectedPoint.value = null
 }
 
-const setInitialTrapezium = () => {
+const setInitialQuadrilateral = () => {
   const padding = 40
-  trapezPoints.value = [
+  quadrilateral.value = [
     { x: padding, y: padding },
     { x: canvas.value.width - padding, y: padding },
     { x: canvas.value.width - padding, y: canvas.value.height - padding },
@@ -60,16 +61,50 @@ const setInitialTrapezium = () => {
   ]
 }
 
-const save = () => {
-  const normalizedTrapezium = trapezPoints.value.map((p) => {
+const reset = () => {
+  setInitialQuadrilateral()
+  savedConfig.value.normalizedQuadrilateral = normalizeQuadrilateral(quadrilateral.value)
+  draw()
+}
+
+const normalizeQuadrilateral = (points) => {
+  return points.map((p) => {
     return {
       x: p.x / canvas.value.width,
       y: p.y / canvas.value.height
     }
   })
-  const invertedMatrix = getInvertedMatrix(normalizedTrapezium)
+}
+const save = () => {
+  const normalizedQuadrilateral = normalizeQuadrilateral(quadrilateral.value)
+  savedConfig.value.normalizedQuadrilateral = normalizedQuadrilateral
+  const invertedMatrix = getInvertedMatrix(normalizedQuadrilateral)
 
-  saveJsonToFile({ matrix: invertedMatrix })
+  saveJsonToFile({
+    matrix: invertedMatrix,
+    quadrilateral: toRaw(quadrilateral.value),
+    normalizedQuadrilateral
+  })
+}
+
+const deNormalizeQuadrilateral = (points) => {
+  return points.map((p) => {
+    console.log('canvas.value.height: ', canvas.value.height, p.y)
+    return {
+      x: p.x * canvas.value.width,
+      y: p.y * canvas.value.height
+    }
+  })
+}
+
+const loadConfig = async () => {
+  if (window.electron) {
+    const config = await window.electron.loadConfig()
+    quadrilateral.value = deNormalizeQuadrilateral(config.normalizedQuadrilateral)
+  } else {
+    const response = await fetch('/matrix.mock.json')
+    savedConfig.value = await response.json()
+  }
 }
 
 const saveJsonToFile = (data) => {
@@ -90,16 +125,16 @@ const draw = () => {
     ctx.value.lineWidth = 1 * devicePixelRatio
     ctx.value.strokeStyle = 'red'
     ctx.value.beginPath()
-    ctx.value.moveTo(trapezPoints.value[0].x, trapezPoints.value[0].y)
+    ctx.value.moveTo(quadrilateral.value[0].x, quadrilateral.value[0].y)
 
-    for (const [index, point] of trapezPoints.value.entries()) {
+    for (const [index, point] of quadrilateral.value.entries()) {
       ctx.value.fillText(index, point.x + 10, point.y + 10)
       ctx.value.lineTo(point.x, point.y)
     }
     ctx.value.closePath()
     ctx.value.stroke()
 
-    for (const [index, point] of trapezPoints.value.entries()) {
+    for (const [index, point] of quadrilateral.value.entries()) {
       ctx.value.beginPath()
       ctx.value.arc(point.x, point.y, handlerSize * devicePixelRatio, 0, 2 * Math.PI)
       ctx.value.fill()
@@ -107,9 +142,9 @@ const draw = () => {
   }
 }
 
-const hitTest = (x, y, trapezium) => {
-  for (let i = 0; i < trapezium.length; i++) {
-    const point = trapezium[i]
+const hitTest = (x, y, quadrilateral) => {
+  for (let i = 0; i < quadrilateral.length; i++) {
+    const point = quadrilateral[i]
     const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2)
     if (distance <= handlerSize * devicePixelRatio + 5 * devicePixelRatio) {
       return i
@@ -118,20 +153,20 @@ const hitTest = (x, y, trapezium) => {
   return -1
 }
 
-const getInvertedMatrix = (trapezium) => {
+const getInvertedMatrix = (quadrilateral) => {
   // First, find the transformation matrix for our deformed rectangle
   // [a b c]
   // [d e f]
   // [g h 1]
 
-  const x0 = trapezium[0].x
-  const y0 = trapezium[0].y
-  const x1 = trapezium[1].x
-  const y1 = trapezium[1].y
-  const x2 = trapezium[2].x
-  const y2 = trapezium[2].y
-  const x3 = trapezium[3].x
-  const y3 = trapezium[3].y
+  const x0 = quadrilateral[0].x
+  const y0 = quadrilateral[0].y
+  const x1 = quadrilateral[1].x
+  const y1 = quadrilateral[1].y
+  const x2 = quadrilateral[2].x
+  const y2 = quadrilateral[2].y
+  const x3 = quadrilateral[3].x
+  const y3 = quadrilateral[3].y
 
   const dx1 = x1 - x2
   const dx2 = x3 - x2
@@ -177,8 +212,6 @@ const setCanvasSize = () => {
 
 const handleResize = () => {
   setUpCanvas()
-  setInitialTrapezium()
-  // draw()
   image.value = false
 }
 
@@ -187,13 +220,14 @@ const setCamera = () => {
 }
 
 const setUpCanvas = () => {
-  if (canvas.value) {
+  if (canvas?.value) {
     ctx.value = canvas.value.getContext('2d')
     setCanvasSize()
   }
 }
 
 onMounted(() => {
+  loadConfig()
   setUpCanvas()
   canvas.value.addEventListener('mousedown', handleMouseDown)
   canvas.value.addEventListener('mousemove', handleMouseMove)
@@ -224,7 +258,10 @@ onMounted(() => {
 
   <div v-show="image">
     <canvas ref="canvas"></canvas>
-    <button class="save" @click="save">Save</button>
+    <div class="buttons">
+      <button class="reset" @click="reset">Reset</button>
+      <button class="save" @click="save">Save</button>
+    </div>
   </div>
 </template>
 
@@ -240,6 +277,7 @@ img {
 
 .webcamui:deep(.flex div) {
   margin-right: 1em;
+  margin-left: 1em;
 }
 
 /* .webcamui:deep(video) {
@@ -249,11 +287,13 @@ img {
 .webcamui:deep(select) {
   height: 100%;
   border-radius: 2px;
+  margin-bottom: 0.6em;
 }
 
 .webcamui:deep(button) {
   background-color: var(--color-active);
   color: var(--vt-c-black);
+  border: 1px solid var(--vt-c-black-soft);
   border-radius: 2px;
 }
 
@@ -266,10 +306,15 @@ canvas {
   width: 100vw;
 }
 
-.save {
+.buttons {
   position: fixed;
   top: 0.7em;
   right: 0.7em;
+  display: flex;
+  justify-content: end;
+}
+
+button {
   font-family: jetbrains-medium;
   text-align: center;
   background: var(--color-active);
@@ -278,13 +323,18 @@ canvas {
   color: var(--vt-c-black-soft);
   padding: 0.3em 0.7em;
   margin-bottom: 0.6em;
+  margin-right: 0.6em;
   box-shadow: 0 0 2px var(--vt-c-white-soft);
   transition: all 0.3s;
   font-size: 13px;
 }
 
-.save:hover {
+button.reset {
+  background-color: var(--vt-c-text-dark-2);
+}
+
+button:hover {
   cursor: pointer;
-  background-color: var(--color-highlight);
+  background-color: var(--color-token-yellow);
 }
 </style>

@@ -96,7 +96,7 @@ svg:hover {
   fill: #7a7a7a;
 }
 .st1 {
-  fill: #f1ed8b;
+  fill: var(--color-token-yellow);
 }
 .st2 {
   fill: #e8eadf;

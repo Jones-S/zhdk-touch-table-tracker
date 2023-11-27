@@ -71,18 +71,13 @@ const connectToWebsocketServer = () => {
     } else if (msg.type === '/tracker/remove') {
       removeToken(msg.args.sessionId)
     } else if (msg.type === '/tracker/update') {
-      console.log('matrix.value: ', toRaw(matrix.value))
-      console.log('msg.args.x: ', msg.args.x)
-      console.log('msg.args.y: ', msg.args.y)
       const pointMatrix = [msg.args.x, msg.args.y, 1]
       const resultMatrix = math.multiply(pointMatrix, matrix.value)
-      console.log('resultMatrix: ', resultMatrix)
       const resultPoint = {
         x: resultMatrix[0] / resultMatrix[2],
         y: resultMatrix[1] / resultMatrix[2]
       }
-      console.log('resultPoint: ', resultPoint)
-
+      // not sending original x and ys but using the mapped values (with transformation matrix)
       udpateToken({ ...msg.args, x: resultPoint.x, y: resultPoint.y })
     } else if (msg.type === '/tracker/error') {
       console.error('Error: No connection could be established to the reacTIVision app.')
