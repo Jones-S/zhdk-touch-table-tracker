@@ -89,7 +89,6 @@ const save = () => {
 
 const deNormalizeQuadrilateral = (points) => {
   return points.map((p) => {
-    console.log('canvas.value.height: ', canvas.value.height, p.y)
     return {
       x: p.x * canvas.value.width,
       y: p.y * canvas.value.height

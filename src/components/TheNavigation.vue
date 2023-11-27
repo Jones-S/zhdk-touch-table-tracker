@@ -24,7 +24,8 @@ header {
 ul {
   list-style: none;
   display: flex;
-  padding: 0.7em 0 0 0.7em;
+  padding: 0.7em 0 0 0;
+  margin-left: 15px;
 }
 
 li {

@@ -10,6 +10,8 @@ const canvasWidth = ref(window.innerWidth)
 const canvasHeight = ref(window.innerHeight)
 const wsConnected = ref(false)
 const matrix = ref(false)
+const invertAngle = ref(false)
+const invertXAxis = ref(false)
 
 const addToken = (sessionId) => {
   console.log('📇 Adding token with sessionId: ', sessionId)
@@ -29,6 +31,20 @@ const udpateToken = ({ sessionId, id, x, y, rotation }) => {
   token.x = x
   token.y = y
   token.rotation = rotation
+}
+
+const handleSettings = (changed) => {
+  switch (changed) {
+    case 'invertAngle':
+      invertAngle.value = !invertAngle.value
+      break
+    case 'invertXAxis':
+      invertXAxis.value = !invertXAxis.value
+      break
+    default:
+      break
+  }
+  // saveConfig()
 }
 
 const recalculateCanvas = () => {
@@ -85,20 +101,6 @@ const connectToWebsocketServer = () => {
   }
 }
 
-const mapPoint = (trapezium, point) => {
-  const inv = getInvertedMatrix(trapezium)
-  const pointMatrix = [point.x, point.y, 1]
-  const resultMatrix = math.multiply(pointMatrix, inv)
-
-  console.log(JSON.stringify(resultMatrix))
-
-  const resultPoint = {
-    x: resultMatrix[0] / resultMatrix[2],
-    y: resultMatrix[1] / resultMatrix[2]
-  }
-  return resultPoint
-}
-
 onMounted(() => {
   // load transformation matrix to get correct positioning of tokens
   loadMatrix()
@@ -120,6 +122,16 @@ onMounted(() => {
       :y="token.y"
       :rotation="token.rotation"
     />
+
+    <div class="controls">
+      <button :class="[{ 'is-active': invertAngle }]" @click="handleSettings('invertAngle')">
+        Invert Angle
+      </button>
+      <button :class="[{ 'is-active': invertXAxis }]" @click="handleSettings('invertXAxis')">
+        Invert X-Axis
+      </button>
+    </div>
+
     <InfoBox :connected="wsConnected" />
   </div>
 </template>
@@ -131,7 +143,37 @@ onMounted(() => {
 }
 
 .controls {
-  padding: 15px;
+  display: inline-flex;
+  flex-direction: column;
+  position: fixed;
+  top: calc(15px + 46px);
+  left: 15px;
+}
+
+button {
+  font-family: jetbrains-medium;
+  text-align: left;
+  background-color: var(--vt-c-text-dark-2);
+  border: 1px solid var(--vt-c-white-soft);
+  border: 0;
+  border-radius: 1px;
+  color: var(--color-text);
+  padding: 0.3em 0.7em;
+  margin-bottom: 0.6em;
+  box-shadow: 0 0 2px var(--vt-c-white-soft);
+  transition: all 0.3s;
+  font-size: 13px;
+}
+
+button.is-active {
+  background-color: #b2c5bf;
+  color: var(--vt-c-black-soft);
+}
+
+button:hover {
+  cursor: pointer;
+  background-color: var(--color-highlight);
+  color: var(--vt-c-black-soft);
 }
 
 .fallback-message {

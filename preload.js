@@ -1,7 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-console.log('preloading and bridging...')
-
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
 window.addEventListener('DOMContentLoaded', () => {
