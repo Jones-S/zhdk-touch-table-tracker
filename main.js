@@ -40,11 +40,40 @@ function createWindow() {
     mainWindow = null
   })
 
-  ipcMain.on('save-json', (event, data) => {
-    // Perform file system operation to save the JSON file
-    const filePath = path.join(__dirname, './matrix.json')
+  // this leads to /Users/USER/Library/Application Support/Token Tracker/config.json
+  const configPath = path.join(app.getPath('userData'), 'config.json')
+  const configExists = fs.existsSync(configPath)
+  console.log('configPath: ', configPath)
 
-    fs.writeFile(filePath, JSON.stringify(data), (err) => {
+  if (!configExists) {
+    const initialConfig = {
+      matrix: [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]
+      ],
+      normalizedQuadrilateral: [
+        { x: 0.2, y: 0.2 },
+        { x: 0.8, y: 0.2 },
+        { x: 0.8, y: 0.8 },
+        { x: 0.2, y: 0.8 }
+      ]
+    }
+    // save initial config file
+    fs.writeFile(configPath, JSON.stringify(initialConfig), (err) => {
+      if (err) {
+        console.error(err)
+      } else {
+        console.log('saved initial config file: ', initialConfig)
+      }
+    })
+  }
+
+  ipcMain.on('save-json', (event, data) => {
+    // this leads to /Users/USER/Library/Application Support/Token Tracker/config.json
+    const configPath = path.join(app.getPath('userData'), 'config.json')
+
+    fs.writeFile(configPath, JSON.stringify(data), (err) => {
       if (err) {
         console.error(err)
         event.reply('save-json-reply', { success: false, error: err.message })
@@ -56,10 +85,7 @@ function createWindow() {
 
   ipcMain.handle('load-config', () => {
     return new Promise((resolve, reject) => {
-      // Perform file system operation to save the JSON file
-      const filePath = path.join(__dirname, './matrix.json')
-
-      fs.readFile(filePath, 'utf8', (err, data) => {
+      fs.readFile(configPath, 'utf8', (err, data) => {
         if (err) {
           console.error('err', err)
           console.info('No matrix calibration file found. Returning default matrix.')
@@ -68,6 +94,12 @@ function createWindow() {
               [1, 1, 1],
               [1, 1, 1],
               [1, 1, 1]
+            ],
+            normalizedQuadrilateral: [
+              { x: 0, y: 0 },
+              { x: 1, y: 0 },
+              { x: 1, y: 1 },
+              { x: 0, y: 1 }
             ]
           }
           resolve(defaultMatrix)

@@ -1,7 +1,7 @@
 {
   "name": "zhdk-touch-table-tracker",
   "productName": "Token Tracker",
-  "version": "1.0.0-alpha",
+  "version": "1.1.0",
   "private": true,
   "main": "main.js",
   "author": "Jonas Scheiwiller",
@@ -16,6 +16,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "builder": "electron-builder build",
+    "builder-test": "electron-builder --dir --arm64",
     "builder-win": "electron-builder build --win --ia32 --x64"
   },
   "dependencies": {

@@ -87,18 +87,29 @@ const connectToWebsocketServer = () => {
     } else if (msg.type === '/tracker/remove') {
       removeToken(msg.args.sessionId)
     } else if (msg.type === '/tracker/update') {
-      const pointMatrix = [msg.args.x, msg.args.y, 1]
-      const resultMatrix = math.multiply(pointMatrix, matrix.value)
-      const resultPoint = {
-        x: resultMatrix[0] / resultMatrix[2],
-        y: resultMatrix[1] / resultMatrix[2]
-      }
+      console.log('msg.args: ', msg.args)
+      const resultPoint = mapPoint(msg.args.x, msg.args.y, matrix.value, invertXAxis.value)
+      const angle = invertAngle.value ? 360 - msg.args.rotation : msg.args.rotation
       // not sending original x and ys but using the mapped values (with transformation matrix)
-      udpateToken({ ...msg.args, x: resultPoint.x, y: resultPoint.y })
+      udpateToken({ ...msg.args, x: resultPoint.x, y: resultPoint.y, rotation: angle })
     } else if (msg.type === '/tracker/error') {
       console.error('Error: No connection could be established to the reacTIVision app.')
     }
   }
+}
+
+const mapPoint = (x, y, invMatrix, invAxis) => {
+  const pointMatrix = [x, y, 1]
+  const resultMatrix = math.multiply(pointMatrix, invMatrix)
+  const point = {
+    x: resultMatrix[0] / resultMatrix[2],
+    y: resultMatrix[1] / resultMatrix[2]
+  }
+  if (invAxis) {
+    // point.x = math.abs(1 - point.x)
+    point.x = 1 - point.x
+  }
+  return point
 }
 
 onMounted(() => {

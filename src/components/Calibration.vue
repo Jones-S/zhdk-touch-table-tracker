@@ -99,9 +99,9 @@ const deNormalizeQuadrilateral = (points) => {
 const loadConfig = async () => {
   if (window.electron) {
     const config = await window.electron.loadConfig()
-    quadrilateral.value = deNormalizeQuadrilateral(config.normalizedQuadrilateral)
+    savedConfig.value = config
   } else {
-    const response = await fetch('/matrix.mock.json')
+    const response = await fetch('/config.mock.json')
     savedConfig.value = await response.json()
   }
 }
