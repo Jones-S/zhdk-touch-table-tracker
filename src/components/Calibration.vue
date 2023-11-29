@@ -21,14 +21,6 @@ const savedConfig = ref(null)
 const invertXAxis = ref(false)
 const invertYAxis = ref(false)
 
-const jsonSavedListener = ref((event, status) => {
-  if (status.success === true) {
-    alert('Config saved successfully!')
-  } else {
-    console.error('Failed to save JSON')
-  }
-})
-
 const handlerSize = 12
 
 const photoTaken = (data) => {
@@ -266,14 +258,20 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
 
   if (window?.electron) {
-    window.electron.onJsonSaved(jsonSavedListener.value)
+    const jsonSavedListener = (event, status) => {
+      if (status.success === true) {
+        alert('Config saved successfully!')
+      } else {
+        console.error('Failed to save JSON')
+      }
+    }
+    window.electron.onJsonSaved(jsonSavedListener)
   }
 })
 
 onBeforeUnmount(() => {
-  if (window?.electron && jsonSavedListener.value) {
-    console.log('removing listener')
-    window.electron.removeListener('save-json-reply', jsonSavedListener.value)
+  if (window?.electron) {
+    window.electron.removeAllListeners('save-json-reply')
   }
 })
 </script>

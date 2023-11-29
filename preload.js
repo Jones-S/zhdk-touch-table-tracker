@@ -16,10 +16,8 @@ contextBridge.exposeInMainWorld('electron', {
     return ipcRenderer.invoke('load-config')
   },
   onJsonSaved: (callback) => ipcRenderer.on('save-json-reply', callback),
-  removeListener: (channel, callback) => {
-    ipcRenderer.removeListener(channel, callback)
-  },
-  getListeners: (channel) => {
-    return ipcRenderer.listeners(channel)
+  removeAllListeners: (channel) => {
+    // removing only the one listener did not work...
+    ipcRenderer.removeAllListeners(channel)
   }
 })
