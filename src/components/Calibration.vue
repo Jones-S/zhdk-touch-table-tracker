@@ -6,7 +6,7 @@
  * https://www.geometrictools.com/Documentation/PerspectiveMappings.pdf
  *
  */
-import { ref, onMounted, toRaw } from 'vue'
+import { ref, onMounted, onBeforeUnmount, toRaw } from 'vue'
 import { WebCamUI } from 'vue-camera-lib'
 import * as math from 'mathjs'
 
@@ -20,6 +20,14 @@ const savedConfig = ref(null)
 // const invertAngle = ref(true)
 const invertXAxis = ref(false)
 const invertYAxis = ref(false)
+
+const jsonSavedListener = ref((event, status) => {
+  if (status.success === true) {
+    alert('Config saved successfully!')
+  } else {
+    console.error('Failed to save JSON')
+  }
+})
 
 const handlerSize = 12
 
@@ -258,13 +266,14 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
 
   if (window?.electron) {
-    window.electron.onJsonSaved((event, status) => {
-      if (status.success === true) {
-        alert('Config saved successfully!')
-      } else {
-        console.error('Failed to save JSON')
-      }
-    })
+    window.electron.onJsonSaved(jsonSavedListener.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (window?.electron && jsonSavedListener.value) {
+    console.log('removing listener')
+    window.electron.removeListener('save-json-reply', jsonSavedListener.value)
   }
 })
 </script>
