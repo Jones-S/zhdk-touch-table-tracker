@@ -102,7 +102,6 @@ const save = () => {
     invertXAxis: invertXAxis.value,
     invertYAxis: invertYAxis.value
   }
-  console.log('config: ', config)
   saveJsonToFile(config)
 }
 

@@ -2,7 +2,6 @@
 import { ref, onMounted, toRaw } from 'vue'
 import RotaryToken from './RotaryToken.vue'
 import InfoBox from './InfoBox.vue'
-import * as math from 'mathjs'
 
 const tokens = ref([])
 let socket = false

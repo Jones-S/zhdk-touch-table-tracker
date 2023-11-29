@@ -79,8 +79,6 @@ function startServers(configuration) {
       } else if (oscMessage.args[0] === 'set') {
         let args
         if (currentConfiguration) {
-          console.log('currentConfiguration?.invertXAxis: ', currentConfiguration?.invertXAxis)
-
           const mappedPoint = mapPoint(
             oscMessage.args[3],
             oscMessage.args[4],
@@ -98,7 +96,6 @@ function startServers(configuration) {
           }
 
           if (currentConfiguration?.invertXAxis) {
-            // console.log('invert x axis: ', args.relativeX, 1 - args.relativeX)
             args.relativeX = 1 - args.relativeX
           }
 
@@ -107,7 +104,6 @@ function startServers(configuration) {
           }
 
           args.translated = true
-          console.log('x: ', oscMessage.args[3], ' translates to: ', args.relativeX)
         } else {
           args = {
             sessionId: oscMessage.args[1],
@@ -183,6 +179,7 @@ function startServers(configuration) {
   // Gracefully close the server on process exit
   process.on('SIGINT', function () {
     console.log('Closing OSC server')
+    // problematic because udpPort is not running?
     udpPort.close()
     process.exit()
   })
