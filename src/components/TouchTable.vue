@@ -10,8 +10,6 @@ const canvasWidth = ref(window.innerWidth)
 const canvasHeight = ref(window.innerHeight)
 const wsConnected = ref(false)
 const matrix = ref(false)
-const invertAngle = ref(false)
-const invertXAxis = ref(false)
 
 const addToken = (sessionId) => {
   console.log('📇 Adding token with sessionId: ', sessionId)
@@ -23,28 +21,14 @@ const removeToken = (sessionId) => {
   tokens.value = tokens.value.filter((token) => sessionId !== token.sessionId)
 }
 
-const udpateToken = ({ sessionId, id, x, y, rotation }) => {
+const udpateToken = ({ sessionId, id, relativeX, relativeY, rotation }) => {
   const token = tokens.value.find((token) => {
     return token.sessionId === sessionId
   })
   token.id = id
-  token.x = x
-  token.y = y
+  token.x = relativeX
+  token.y = relativeY
   token.rotation = rotation
-}
-
-const handleSettings = (changed) => {
-  switch (changed) {
-    case 'invertAngle':
-      invertAngle.value = !invertAngle.value
-      break
-    case 'invertXAxis':
-      invertXAxis.value = !invertXAxis.value
-      break
-    default:
-      break
-  }
-  // saveConfig()
 }
 
 const recalculateCanvas = () => {
@@ -87,29 +71,12 @@ const connectToWebsocketServer = () => {
     } else if (msg.type === '/tracker/remove') {
       removeToken(msg.args.sessionId)
     } else if (msg.type === '/tracker/update') {
-      console.log('msg.args: ', msg.args)
-      const resultPoint = mapPoint(msg.args.x, msg.args.y, matrix.value, invertXAxis.value)
-      const angle = invertAngle.value ? 360 - msg.args.rotation : msg.args.rotation
-      // not sending original x and ys but using the mapped values (with transformation matrix)
-      udpateToken({ ...msg.args, x: resultPoint.x, y: resultPoint.y, rotation: angle })
+      console.log('msg: ', msg)
+      udpateToken({ ...msg.args })
     } else if (msg.type === '/tracker/error') {
       console.error('Error: No connection could be established to the reacTIVision app.')
     }
   }
-}
-
-const mapPoint = (x, y, invMatrix, invAxis) => {
-  const pointMatrix = [x, y, 1]
-  const resultMatrix = math.multiply(pointMatrix, invMatrix)
-  const point = {
-    x: resultMatrix[0] / resultMatrix[2],
-    y: resultMatrix[1] / resultMatrix[2]
-  }
-  if (invAxis) {
-    // point.x = math.abs(1 - point.x)
-    point.x = 1 - point.x
-  }
-  return point
 }
 
 onMounted(() => {
@@ -134,15 +101,6 @@ onMounted(() => {
       :rotation="token.rotation"
     />
 
-    <div class="controls">
-      <button :class="[{ 'is-active': invertAngle }]" @click="handleSettings('invertAngle')">
-        Invert Angle
-      </button>
-      <button :class="[{ 'is-active': invertXAxis }]" @click="handleSettings('invertXAxis')">
-        Invert X-Axis
-      </button>
-    </div>
-
     <InfoBox :connected="wsConnected" />
   </div>
 </template>
@@ -151,40 +109,6 @@ onMounted(() => {
 .canvas {
   width: 100%;
   height: 100%;
-}
-
-.controls {
-  display: inline-flex;
-  flex-direction: column;
-  position: fixed;
-  top: calc(15px + 46px);
-  left: 15px;
-}
-
-button {
-  font-family: jetbrains-medium;
-  text-align: left;
-  background-color: var(--vt-c-text-dark-2);
-  border: 1px solid var(--vt-c-white-soft);
-  border: 0;
-  border-radius: 1px;
-  color: var(--color-text);
-  padding: 0.3em 0.7em;
-  margin-bottom: 0.6em;
-  box-shadow: 0 0 2px var(--vt-c-white-soft);
-  transition: all 0.3s;
-  font-size: 13px;
-}
-
-button.is-active {
-  background-color: #b2c5bf;
-  color: var(--vt-c-black-soft);
-}
-
-button:hover {
-  cursor: pointer;
-  background-color: var(--color-highlight);
-  color: var(--vt-c-black-soft);
 }
 
 .fallback-message {

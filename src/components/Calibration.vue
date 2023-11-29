@@ -17,6 +17,9 @@ const selectedPoint = ref(null)
 const aspectRatio = ref(null)
 const quadrilateral = ref(null)
 const savedConfig = ref(null)
+// const invertAngle = ref(true)
+const invertXAxis = ref(false)
+const invertYAxis = ref(false)
 
 const handlerSize = 12
 
@@ -34,6 +37,19 @@ function handleMouseDown(event) {
 
   selectedPoint.value = hitTest(mouseX, mouseY, quadrilateral.value)
   draw()
+}
+
+const handleSettings = (changed) => {
+  switch (changed) {
+    case 'invertYAxis':
+      invertYAxis.value = !invertYAxis.value
+      break
+    case 'invertXAxis':
+      invertXAxis.value = !invertXAxis.value
+      break
+    default:
+      break
+  }
 }
 
 const handleMouseMove = (event) => {
@@ -79,12 +95,15 @@ const save = () => {
   const normalizedQuadrilateral = normalizeQuadrilateral(quadrilateral.value)
   savedConfig.value.normalizedQuadrilateral = normalizedQuadrilateral
   const invertedMatrix = getInvertedMatrix(normalizedQuadrilateral)
-
-  saveJsonToFile({
+  const config = {
     matrix: invertedMatrix,
     quadrilateral: toRaw(quadrilateral.value),
-    normalizedQuadrilateral
-  })
+    normalizedQuadrilateral,
+    invertXAxis: invertXAxis.value,
+    invertYAxis: invertYAxis.value
+  }
+  console.log('config: ', config)
+  saveJsonToFile(config)
 }
 
 const deNormalizeQuadrilateral = (points) => {
@@ -100,6 +119,8 @@ const loadConfig = async () => {
   if (window.electron) {
     const config = await window.electron.loadConfig()
     savedConfig.value = config
+    invertXAxis.value = config.invertXAxis
+    invertYAxis.value = config.invertYAxis
   } else {
     const response = await fetch('/config.mock.json')
     savedConfig.value = await response.json()
@@ -136,6 +157,7 @@ const draw = () => {
     for (const [index, point] of quadrilateral.value.entries()) {
       ctx.value.beginPath()
       ctx.value.arc(point.x, point.y, handlerSize * devicePixelRatio, 0, 2 * Math.PI)
+      ctx.value.fillStyle = 'rgba(255, 0, 0, 0.5)'
       ctx.value.fill()
     }
   }
@@ -204,8 +226,10 @@ const setCanvasSize = () => {
     aspectRatio.value = settings.width / settings.height
 
     const screenDensity = window.devicePixelRatio
-    canvas.value.width = screenDensity * window.innerWidth
-    canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
+    if (canvas.value) {
+      canvas.value.width = screenDensity * window.innerWidth
+      canvas.value.height = screenDensity * (window.innerWidth / aspectRatio.value)
+    }
   })
 }
 
@@ -258,6 +282,18 @@ onMounted(() => {
   <div v-show="image">
     <canvas ref="canvas"></canvas>
     <div class="buttons">
+      <button
+        :class="[{ 'is-active': invertYAxis }, 'toggle']"
+        @click="handleSettings('invertYAxis')"
+      >
+        Invert Y-Axis
+      </button>
+      <button
+        :class="[{ 'is-active': invertXAxis }, 'mr toggle']"
+        @click="handleSettings('invertXAxis')"
+      >
+        Invert X-Axis
+      </button>
       <button class="reset" @click="reset">Reset</button>
       <button class="save" @click="save">Save</button>
     </div>
@@ -328,6 +364,24 @@ button {
   font-size: 13px;
 }
 
+button.toggle {
+  background-color: var(--vt-c-text-dark-2);
+}
+
+button.is-active {
+  background-color: var(--color-highlight);
+  color: var(--vt-c-black-soft);
+}
+
+/* button:hover {
+  cursor: pointer;
+  background-color: var(--color-highlight);
+  color: var(--vt-c-black-soft);
+} */
+
+button.mr {
+  margin-right: 2em;
+}
 button.reset {
   background-color: var(--vt-c-text-dark-2);
 }

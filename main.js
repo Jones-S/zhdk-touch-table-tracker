@@ -7,7 +7,7 @@
 
 /* eslint-disable no-undef */
 const { app, BrowserWindow, ipcMain } = require('electron')
-const startServers = require('./src/websocket/server.js')
+const { startServers, updateConfiguration } = require('./src/websocket/server.js')
 
 const url = require('url')
 const path = require('path')
@@ -17,6 +17,23 @@ let mainWindow
 
 const preloadPath = path.join(__dirname, './preload.js')
 console.log(preloadPath) // Check if the path printed is correct
+
+async function loadConfig() {
+  return new Promise((resolve, reject) => {
+    const configPath = path.join(app.getPath('userData'), 'config.json')
+
+    fs.readFile(configPath, 'utf8', (err, data) => {
+      const jsonData = JSON.parse(data)
+      resolve(jsonData)
+    })
+  })
+}
+
+async function startService() {
+  const configuration = await loadConfig()
+
+  startServers(configuration)
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -72,6 +89,8 @@ function createWindow() {
   ipcMain.on('save-json', (event, data) => {
     // this leads to /Users/USER/Library/Application Support/Token Tracker/config.json
     const configPath = path.join(app.getPath('userData'), 'config.json')
+    console.log('updating with data: ', data)
+    updateConfiguration(data)
 
     fs.writeFile(configPath, JSON.stringify(data), (err) => {
       if (err) {
@@ -105,7 +124,6 @@ function createWindow() {
           resolve(defaultMatrix)
         }
         const jsonData = JSON.parse(data)
-        console.log('jsonData: ', jsonData)
         resolve(jsonData)
       })
     })
@@ -121,7 +139,7 @@ app.on('activate', function () {
   if (mainWindow === null) createWindow()
 })
 
-startServers()
+startService()
 
 // To test if the websocket is running just execute some JavaScript inside the browsers console:
 // const ws = new WebSocket('ws://localhost:6050')
