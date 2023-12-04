@@ -34,6 +34,7 @@ const yPercentage = computed(() => {
 
 const size = 50
 const cssSize = `${size}px`
+const cssTokenTranslation = `-${size / 2}px, -${size / 2}px`
 </script>
 
 <template>
@@ -78,6 +79,7 @@ const cssSize = `${size}px`
 <style scoped>
 .token {
   position: absolute;
+  transform: translate(v-bind(cssTokenTranslation));
 }
 
 svg {

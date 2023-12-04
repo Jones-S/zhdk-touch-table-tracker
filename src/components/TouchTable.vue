@@ -99,6 +99,14 @@ onMounted(() => {
       :y="token.y"
       :rotation="token.rotation"
     />
+    <RotaryToken
+      @destroy="removeToken"
+      :id="123"
+      :session-id="123"
+      :x="0.9"
+      :y="0.9"
+      :rotation="180"
+    />
 
     <InfoBox :connected="wsConnected" />
   </div>
@@ -108,6 +116,11 @@ onMounted(() => {
 .canvas {
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  position: relative;
+  background-color: orange;
 }
 
 .fallback-message {
