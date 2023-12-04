@@ -19,7 +19,7 @@ const status = computed(() => {
     <table>
       <tr>
         <td>Token Tracker:</td>
-        <td>v1.1.0</td>
+        <td>v1.1.2</td>
       </tr>
       <tr>
         <td>Websocket Port:</td>

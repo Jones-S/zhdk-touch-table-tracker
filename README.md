@@ -7,6 +7,47 @@ The reacTIVision app sends marker information via OSC signal (TUIO respectively)
 The Token Tracker app sets up server to listen to the UDP protocol receiving the OSC messages.
 At the same time it sets up a websocket server on port 6050 and acts as a proxy, sanitizing and forwarding the messages (sending them as JSON in a more readable format).
 
+## Calibration
+
+## Axis inversion
+
+Depending on the camera (built in vs. external) you might have to change the settings within the reacTIVision app. A built in laptop camera does not need any axes inversions. On the 4k camera for the table we need to set X-Axis inversion to 1.
+
+Then you open the tracker app and take a photo. Make sure to place the tokens exactly at the edge of the screen. Due to perspective distortion, you might have to place the edges a bit more on the outside, especially if the token is very high and not lying directly on the screen.
+
+```
+Touch table without axis inversion:
+
+1/0 ============= 0/0
+    |            |
+    |            |
+    |            |
+1/1 ============= 0/1
+```
+
+```
+Touch table without x-axis inversion:
+
+0/0 ============= 1/0
+    |            |
+    |            |
+    |            |
+0/1 ============= 1/1
+```
+
+No need to invert axis in tracker app...
+as soon as table x-axis is inverted we are OK.
+
+```
+Macbook cam without axis inversion:
+
+0/0 ============= 1/0
+    |            |
+    |            |
+    |            |
+0/1 ============= 1/1
+```
+
 ## Building and Distribution
 
 The app is built with electron-builder. When sending a ZIP or DMG installer to somebody, the app will not work because of OS X quarantine.
@@ -77,4 +118,8 @@ The forwarded messages look like this:
     rotation: 156.60326030896937
   }
 }
+```
+
+```
+
 ```
