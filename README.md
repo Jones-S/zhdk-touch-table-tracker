@@ -63,59 +63,46 @@ $ xattr -cr /Users/[filePath]/Token\ Tracker.app
 
 The incoming messages look like this:
 
-```JSON
-{ address: '/tuio/2Dobj', args: [ 'fseq', 44 ] }
-
+```json
+{ "address": "/tuio/2Dobj", "args": ["fseq", 44] }
 ```
 
-```JSON
-{ address: '/tuio/2Dobj', args: [ 'source', 'reacTIVision' ] }
+```json
+{ "address": "/tuio/2Dobj", "args": ["source", "reacTIVision"] }
 ```
 
-```JSON
-{ address: '/tuio/2Dobj', args: [ 'alive', 12, 14 ] }
+```json
+{ "address": "/tuio/2Dobj", "args": ["alive", 12, 14] }
 ```
 
-```JSON
+```json
 {
-  address: '/tuio/2Dobj',
+  "address": "/tuio/2Dobj",
   // more about these arguments -> https://www.tuio.org/?specification -> Attributes
-  args: [
-    'set',
-    1,
-    2,
-    0.9206402897834778,
-    0.6420745849609375,
-    2.2742528915405273,
-    0,
-    0,
-    0,
-    -0,
-    -0
-  ]
+  "args": ["set", 1, 2, 0.9206402897834778, 0.6420745849609375, 2.2742528915405273, 0, 0, 0, -0, -0]
 }
 ```
 
 The forwarded messages look like this:
 
-```JSON
+```json
 // sent if the session ids within the alive message type change
 { type: '/tracker/add', args: { sessionId: 4 } }
 
 { type: '/tracker/remove', args: { sessionId: 4 } }
 ```
 
-```JSON
+```json
 {
-  type: '/tracker/update',
-  args: {
-    sessionId: 2,
-    id: 2,
-    x: 0.6030212044715881, // the reacTIVision app does not send absolute x and y positions
-    y: 0.41140735149383545,
-    relativeX: 0.6030212044715881,
-    relativeY: 0.41140735149383545,
-    rotation: 156.60326030896937
+  "type": "/tracker/update",
+  "args": {
+    "sessionId": 2,
+    "id": 2,
+    "x": 0.6030212044715881, // the reacTIVision app does not send absolute x and y positions
+    "y": 0.41140735149383545,
+    "relativeX": 0.6030212044715881,
+    "relativeY": 0.41140735149383545,
+    "rotation": 156.60326030896937
   }
 }
 ```
